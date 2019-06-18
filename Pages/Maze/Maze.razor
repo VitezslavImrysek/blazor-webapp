@@ -22,20 +22,22 @@
             <div class="board-row">
                 @for (int column = 0; column < RealSize; column++)
                 {
-                    bool isPlayerPosition = (column == _rowPosition) && (row == _columnPosition);
+                    bool isPlayerPosition = (row == _rowPosition) && (column == _columnPosition);
                     if (isPlayerPosition)
                     {
                         <div class="square player" id="playerID">0</div>
                     }
                     else
                     {
-                        var cell = MazeData[row, column];
+                        var cell = MazeData[column, row];
                         string value = (cell.IsVisible && cell.IsWall) ? "" : string.Empty;
-                        if(cell.IsVisible && cell.IsWall){
+                        if(cell.IsVisible && cell.IsWall)
+                        {
                             <div class="square wall">@value</div>
                         }
-                        else{
-                        <div class="square">@value</div>
+                        else
+                        {
+                            <div class="square">@value</div>
                         }
                     }
                 }
