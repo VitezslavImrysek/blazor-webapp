@@ -16,32 +16,23 @@
             @onclick="@OnSizeChanged">New Map</button>
     <br/>
 
-    <div class="board" style="--squareAmount:@RealSize">
-        @for (int row = 0; row < RealSize; row++)
+    <div class="board" style="--boardDimension:@BoardDimension">
+        @for (int row = 0; row < BoardDimension; row++)
         {
-            <div class="board-row">
-                @for (int column = 0; column < RealSize; column++)
+            @for (int column = 0; column < BoardDimension; column++)
+            {
+                bool isPlayerPosition = (row == _rowPosition) && (column == _columnPosition);
+                if (isPlayerPosition)
                 {
-                    bool isPlayerPosition = (row == _rowPosition) && (column == _columnPosition);
-                    if (isPlayerPosition)
-                    {
-                        <div class="square player" id="playerID">0</div>
-                    }
-                    else
-                    {
-                        var cell = MazeData[column, row];
-                        string value = (cell.IsVisible && cell.IsWall) ? "" : string.Empty;
-                        if(cell.IsVisible && cell.IsWall)
-                        {
-                            <div class="square wall">@value</div>
-                        }
-                        else
-                        {
-                            <div class="square">@value</div>
-                        }
-                    }
+                    <div class="square player">0</div>
                 }
-            </div>
+                else
+                {
+                    var cell = MazeData[column, row];
+                    string className = (cell.IsVisible && cell.IsWall) ? "square wall" : "square";
+                    <div class="@className"></div>
+                }
+            }
         }
     </div>
 
@@ -55,10 +46,9 @@
 
 
 @functions {
-    private const int CELL_SIZE = 16;
-
     private Random _random;
     private int _size;
+    private int _boardDimension;
     private int _rowPosition;
     private int _columnPosition;
 
@@ -68,14 +58,14 @@
 
     private MazeCell[,] MazeData;
     private string GameTime;
-    private int RealSize => 2 * Size + 1;
-    private int MinWidth => (RealSize - 1) * CELL_SIZE;
 
     public int Size
     {
         get { return _size; }
         set { _size = value; OnSizeChanged(); }
     }
+
+    public int BoardDimension => _boardDimension;
 
     protected override void OnInit()
     {
@@ -109,20 +99,20 @@
     {
         _timer.Stop();
         _isWon = false;
-        GameTime = TimeSpan.Zero.ToString(@"hh\:mm\:ss");
-        MazeData = new MazeCell[RealSize, RealSize];
+        _boardDimension = 2 * _size + 1;
 
-        Random r = new Random();
+        GameTime = TimeSpan.Zero.ToString(@"hh\:mm\:ss");
+        MazeData = new MazeCell[BoardDimension, BoardDimension];
 
         var maze = MazeData;
-        var size = RealSize;
+        var dimension = BoardDimension;
         // Prepare walls
-        for (int row = 0; row < size; row++)
+        for (int row = 0; row < dimension; row++)
         {
-            for (int column = 0; column < size; column++)
+            for (int column = 0; column < dimension; column++)
             {
                 var cell = maze[column, row];
-                if (row == 0 || row == size - 1 || column == 0 || column == size - 1)
+                if (row == 0 || row == dimension - 1 || column == 0 || column == dimension - 1)
                 {
                     // Outer walls
                     cell.IsWall = true;
@@ -147,13 +137,13 @@
         // Set entry
         MazeData[middleColumn, 0] = new MazeCell() { IsWall = false };
         // Set exit
-        MazeData[middleColumn, RealSize - 1] = new MazeCell() { IsWall = false };
+        MazeData[middleColumn, BoardDimension - 1] = new MazeCell() { IsWall = false };
         // Generate maze
         GenerateMaze(MazeData, new bool[Size, Size], _random.Next(0, Size), _random.Next(0, Size));
         // Set position
         SetPosition(0, middleColumn);
         // Make goal visible
-        SetVisibility(RealSize - 1, middleColumn, 1, true);
+        SetVisibility(BoardDimension - 1, middleColumn, 1, true);
     }
 
     private void GenerateMaze(MazeCell[,] maze, bool[,] visitedCells, int row, int column)
@@ -204,7 +194,6 @@
                 continue;
             }
 
-
             maze[mazeDataColumn, mazeDataRow] = new MazeCell() { IsWall = false };
             GenerateMaze(maze, visitedCells, nextRow, nextColumn);
         }
@@ -245,8 +234,6 @@
         int row = _rowPosition;
         int column = _columnPosition;
 
-
-
         switch (direction)
         {
             case Direction.N:
@@ -263,13 +250,13 @@
                 break;
         }
 
-        var realSize = RealSize;
-        if (row < 0 || row >= realSize - 1 || column < 0 || column > realSize - 1)
+        var dimension = BoardDimension;
+        if (row < 0 || row >= dimension - 1 || column < 0 || column > dimension - 1)
         {
             // Out of bounds.
 
             // Check victory conditions.
-            if (direction == Direction.S && row == realSize - 1 && column == Size + 1)
+            if (direction == Direction.S && row == dimension - 1 && column == Size + 1)
             {
                 // Victory
                 
@@ -300,23 +287,22 @@
         StateHasChanged();
     }
 
-    private void SetPosition(int realRow, int realColumn)
+    private void SetPosition(int row, int column)
     {
-        var realSize = RealSize;
-        SetVisibility(realRow, realColumn, 1, true);
+        SetVisibility(row, column, 1, true);
 
-        _rowPosition = realRow;
-        _columnPosition = realColumn;
+        _rowPosition = row;
+        _columnPosition = column;
     }
 
-    private void SetVisibility(int realRow, int realColumn, int radius, bool isVisible)
+    private void SetVisibility(int rowCenter, int columnCenter, int radius, bool isVisible)
     {
-        var realSize = RealSize;
-        for (int row = realRow - radius; row <= realRow + radius; row++)
+        var dimension = BoardDimension;
+        for (int row = rowCenter - radius; row <= rowCenter + radius; row++)
         {
-            for (int column = realColumn - radius; column <= realColumn + radius; column++)
+            for (int column = columnCenter - radius; column <= columnCenter + radius; column++)
             {
-                if (row >= 0 && row < realSize && column >= 0 && column < realSize)
+                if (row >= 0 && row < dimension && column >= 0 && column < dimension)
                 {
                     // Set visibility
                     var cell = MazeData[column, row];
@@ -329,10 +315,10 @@
 
     private void SetVisibilityAll(bool isVisible)
     {
-        var realSize = RealSize;
-        for (int row = 0; row < realSize; row++)
+        var dimension = BoardDimension;
+        for (int row = 0; row < dimension; row++)
         {
-            for (int column = 0; column < realSize; column++)
+            for (int column = 0; column < dimension; column++)
             {
                 // Set visibility
                 var cell = MazeData[column, row];
