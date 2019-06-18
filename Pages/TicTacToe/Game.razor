@@ -1,0 +1,111 @@
+@page "/tictactoe"
+
+<link href="css/tictactoe.css" rel="stylesheet" type="text/css" />
+<div class="game">
+    <div class="game-board">
+        <Board Squares="@Current" OnClick="@HandleClick" />
+    </div>
+    <div class="game-info">
+        <div>@GetStatus()</div>
+        <ol>
+            @for (int i = 0; i < history.Count; i++)
+            {
+                int step = i;
+                string desc = (step == 0) ? "Go to game start" : "Go to move #" + step;
+                
+                <li @key="@step">
+                    <button @onclick="@(() => JumpTo(step))">@desc</button>
+                </li>
+            }
+        </ol>
+    </div>
+</div>
+
+@functions {
+    private List<string[]> history;
+    private bool xIsNext;
+    private int stepNumber;
+
+    public string[] Current => history[stepNumber];
+
+    protected override void OnInit()
+    {
+        history = new List<string[]>() { new string[9] };
+        stepNumber = 0;
+        xIsNext = true;
+    }
+
+    private string GetStatus() 
+    {
+        string[] current = Current;
+        string winner = CalculateWinner(current);
+        if (!string.IsNullOrEmpty(winner)) 
+        {
+            return $"Winner: {winner}";
+        }
+        else if (stepNumber == 9)
+        {
+            return "Draw";
+        }
+        else
+        {
+            return $"Next player: {(xIsNext ? "X" : "O")}";
+        }
+    }
+
+    private void HandleClick(int i)
+    {
+        var historyNew = history.GetRange(0, stepNumber + 1);
+        var current = historyNew[historyNew.Count - 1];
+        var squares = current.Select(x => x).ToArray();
+        if (CalculateWinner(squares) != null || !string.IsNullOrEmpty(squares[i]))
+        {
+            return;
+        }
+
+        squares[i] = xIsNext ? "X" : "O";
+        historyNew.Add(squares);
+        history = historyNew;
+        stepNumber++;
+        xIsNext = !xIsNext;
+
+        this.StateHasChanged();
+    }
+
+    public void JumpTo(int step)
+    {
+        stepNumber = step;
+        xIsNext = (step % 2) == 0;
+
+        this.StateHasChanged();
+    }
+
+    private static string CalculateWinner(string[] squares)
+    {
+        int[][] lines = new int[][]
+        {
+            new int[] {0, 1, 2},
+            new int[] {3, 4, 5},
+            new int[] {6, 7, 8},
+            new int[] {0, 3, 6},
+            new int[] {1, 4, 7},
+            new int[] {2, 5, 8},
+            new int[] {0, 4, 8},
+            new int[] {2, 4, 6},
+        };
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            string a = squares[line[0]];
+            string b = squares[line[1]];
+            string c = squares[line[2]];
+            if (!string.IsNullOrEmpty(a) && a == b && a == c)
+            {
+                return a;
+            }
+        }
+
+        return null;
+    }
+}

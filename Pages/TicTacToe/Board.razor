@@ -1,0 +1,25 @@
+<div>
+    <div class="board-row">
+        <Square Value="@Squares[0]" OnClick="@(() => OnClick(0))" />
+        <Square Value="@Squares[1]" OnClick="@(() => OnClick(1))" />
+        <Square Value="@Squares[2]" OnClick="@(() => OnClick(2))" />
+    </div>
+    <div class="board-row">
+        <Square Value="@Squares[3]" OnClick="@(() => OnClick(3))" />
+        <Square Value="@Squares[4]" OnClick="@(() => OnClick(4))" />
+        <Square Value="@Squares[5]" OnClick="@(() => OnClick(5))" />
+    </div>
+    <div class="board-row">
+        <Square Value="@Squares[6]" OnClick="@(() => OnClick(6))" />
+        <Square Value="@Squares[7]" OnClick="@(() => OnClick(7))" />
+        <Square Value="@Squares[8]" OnClick="@(() => OnClick(8))" />
+    </div>
+</div>
+
+@functions {
+    [Parameter]
+    public string[] Squares { get; set; }
+
+    [Parameter]
+    public Action<int> OnClick { get; set; }
+}

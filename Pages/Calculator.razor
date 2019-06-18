@@ -1,0 +1,208 @@
+﻿@page "/calculator"
+
+<link href="css/calculator.css" rel="stylesheet" />
+<p style="height: 25px; font-size: larger">@Text</p>
+<p style="height: 20px; font-size: smaller">@Text2</p>
+
+<table style="width:100%; height:100%; table-layout:fixed">
+    <tr>
+        <td><button style="width:100%" @onclick="@Clear">CE</button></td>
+        <td><button style="width:100%" @onclick="@(() => SetOperation(Operation.Divide))">/</button></td>
+        <td><button style="width:100%" @onclick="@(() => SetOperation(Operation.Multiply))">*</button></td>
+        <td><button style="width:100%" @onclick="@(() => SetOperation(Operation.Subtract))">-</button></td>
+    </tr>
+    <tr>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("7"))">7</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("8"))">8</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("9"))">9</button></td>
+        <td rowspan="2"><button style="width:100%; height:100%" @onclick="@(() => SetOperation(Operation.Add))">+</button></td>
+    </tr>
+    <tr>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("4"))">4</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("5"))">5</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("6"))">6</button></td>
+    </tr>
+    <tr>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("1"))">1</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("2"))">2</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("3"))">3</button></td>
+        <td rowspan="2"><button style="width:100%; height:100%" @onclick="@Compute">=</button></td>
+    </tr>
+    <tr>
+        <td colspan="2"><button style="width:100%" @onclick="@(() => AddNumber("0"))">0</button></td>
+        <td><button style="width:100%" @onclick="@(() => AddNumber("."))">.</button></td>
+    </tr>
+</table>
+
+<table style="margin-top: 5px; table-layout:fixed">
+    @for (int i = 0; i < _history.Count; i++)
+    {
+        var index = i;
+        var step = _history[index];
+
+        <tr>
+            <td>@step.ToString()</td>
+            <td><button style="margin-left: 5px" @onclick="@(() => GoTo(index))">Go to</button></td>
+        </tr>
+    }
+</table>
+
+@functions {
+    private double _numberA = 0;
+    private double _numberB = double.NaN;
+    private Operation _op;
+    private bool _isComputed = false;
+
+    private string Text;
+    private string Text2;
+
+    private List<CalculationStep> _history = new List<CalculationStep>();
+
+    private void AddNumber(string number)
+    {
+        if (_isComputed)
+        {
+            Clear();
+        }
+
+        _numberB = double.NaN;
+        Text += number;
+    }
+
+    private void SetOperation(Operation operation)
+    {
+        if (_isComputed)
+        {
+            _op = Operation.None;
+            _isComputed = false;
+        }
+
+        if (_op != Operation.None)
+        {
+            // Operation is already defined.
+            if (!double.TryParse(Text, out _))
+            {
+                // User havent provided a number2 yet.
+
+                // Just change operation.
+                _op = operation;
+                Text2 = $"{_numberA} {OperationToString(_op)}";
+
+                return;
+            }
+
+            // User already provided some input for number2.
+
+            // Compute previous operation.
+            Compute();
+            // Apply new operation.
+            SetOperation(operation);
+        }
+        else
+        {
+            _numberA = double.Parse(Text);
+            _op = operation;
+
+            Text = string.Empty;
+            Text2 = $"{_numberA} {OperationToString(_op)}";
+        }
+    }
+
+    private void Compute()
+    {
+        if (double.IsNaN(_numberB))
+        {
+            _numberB = double.Parse(Text);
+        }
+
+        double result = _numberA;
+        switch (_op)
+        {
+            case Operation.Add:
+                result = _numberA + _numberB;
+                _history.Add(new CalculationStep(_numberA, _numberB, result, _op));
+                break;
+            case Operation.Subtract:
+                result = _numberA - _numberB;
+                _history.Add(new CalculationStep(_numberA, _numberB, result, _op));
+                break;
+            case Operation.Multiply:
+                result = _numberA * _numberB;
+                _history.Add(new CalculationStep(_numberA, _numberB, result, _op));
+                break;
+            case Operation.Divide:
+                result = _numberA / _numberB;
+                _history.Add(new CalculationStep(_numberA, _numberB, result, _op));
+                break;
+        }
+
+        _isComputed = true;
+        _numberA = result;
+        Text = _numberA.ToString();
+        Text2 = string.Empty;
+    }
+
+    private void Clear()
+    {
+        _numberA = 0;
+        _numberB = double.NaN;
+        _op = Operation.None;
+        _isComputed = false;
+        Text = string.Empty;
+        Text2 = string.Empty;
+    }
+
+    private void GoTo(int index)
+    {
+        Clear();
+        Text = _history[index].Result.ToString();
+    }
+
+    private static string OperationToString(Operation operation)
+    {
+        switch (operation)
+        {
+            default:
+            case Operation.None:
+                return string.Empty;
+            case Operation.Add:
+                return "+";
+            case Operation.Subtract:
+                return "-";
+            case Operation.Multiply:
+                return "*";
+            case Operation.Divide:
+                return "/";
+        }
+    }
+
+    private enum Operation
+    {
+        None,
+        Add,
+        Subtract,
+        Multiply,
+        Divide
+    }
+
+    private struct CalculationStep
+    {
+        public CalculationStep(double numberA, double numberB, double result, Operation operation)
+        {
+            NumberA = numberA;
+            NumberB = numberB;
+            Result = result;
+            Operation = operation;
+        }
+
+        public double NumberA;
+        public double NumberB;
+        public Operation Operation;
+        public double Result;
+
+        public override string ToString()
+        {
+            return $"{NumberA} {OperationToString(Operation)} {NumberB} = {Result}";
+        }
+    }
+}

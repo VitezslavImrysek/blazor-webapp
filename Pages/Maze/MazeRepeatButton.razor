@@ -1,0 +1,38 @@
+<button style="border-radius: 12px; border: 2px solid #898989;" 
+        @onmousedown="@Start" @onmouseup="@End">
+        @Text
+</button>
+
+@functions {
+    private const int INTERVAL = 300;
+    private System.Timers.Timer _timer;
+
+    [Parameter]
+    public string Text { get; set; }
+
+    [Parameter]
+    public Action OnClick { get; set; }
+
+    protected override void OnInit()
+    {
+        _timer = new System.Timers.Timer();
+        _timer.Interval = INTERVAL;
+        _timer.Elapsed += (s, e) => OnTick();
+    }
+
+    private void Start()
+    {
+        OnTick();
+        _timer.Start();
+    }
+
+    private void End()
+    {
+        _timer.Stop();
+    }
+
+    private void OnTick()
+    {
+        OnClick?.Invoke();
+    }
+}

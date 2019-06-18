@@ -1,0 +1,49 @@
+﻿:root {
+    --cell-size: 16px;
+    --squareAmount :21;
+    --boardWidth:calc(var(--cell-size)*var(--squareAmount)); 
+}
+
+.board {
+    border: 1px solid rgb(88, 29, 199); 
+    display: grid;
+    grid-template-columns: repeat(var(--squareAmount), var(--cell-size));
+    grid-template-rows: repeat(var(--squareAmount), var(--cell-size));
+    width: var(--boardWidth);
+    height: var(--boardWidth);
+    margin-left:auto;
+    margin-right:auto;
+}
+
+
+
+.square {
+    background-color: rgb(247, 247, 247);
+    border: 1px solid rgb(62, 9, 184);
+    font-size: var(--cell-size);
+    line-height: var(--cell-size);
+    height: var(--cell-size);
+    width: var(--cell-size);
+    padding: 0;
+    margin: 0;
+    text-align: center;
+   
+    opacity: 0;
+    transition: all 0s!important;
+}
+
+.player {
+    color: red;
+    opacity:1 !important;
+}
+
+.wall{
+    opacity:1!important;
+    background-color: red!important;
+    transition: all 0s!important;
+}
+
+.playaa{
+    color: rgb(4, 160, 207);
+    background-color: brown;
+}
