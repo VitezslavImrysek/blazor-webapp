@@ -24,13 +24,12 @@
                 bool isPlayerPosition = (row == _rowPosition) && (column == _columnPosition);
                 if (isPlayerPosition)
                 {
-                    <div class="square player">0</div>
+                    <MazePlayer />
                 }
                 else
                 {
-                    var cell = MazeData[column, row];
-                    string className = (cell.IsVisible && cell.IsWall) ? "square wall" : "square";
-                    <div class="@className"></div>
+                    CellDefinition definition = MazeData[column, row];
+                    <MazeCell Definition="@definition" />
                 }
             }
         }
@@ -56,7 +55,7 @@
     private DateTimeOffset _gameStartTime;
     private bool _isWon;
 
-    private MazeCell[,] MazeData;
+    private CellDefinition[,] MazeData;
     private string GameTime;
 
     public int Size
@@ -102,7 +101,7 @@
         _boardDimension = 2 * _size + 1;
 
         GameTime = TimeSpan.Zero.ToString(@"hh\:mm\:ss");
-        MazeData = new MazeCell[BoardDimension, BoardDimension];
+        MazeData = new CellDefinition[BoardDimension, BoardDimension];
 
         var maze = MazeData;
         var dimension = BoardDimension;
@@ -115,18 +114,18 @@
                 if (row == 0 || row == dimension - 1 || column == 0 || column == dimension - 1)
                 {
                     // Outer walls
-                    cell.IsWall = true;
+                    cell.Kind = CellKind.Wall;
                 }
                 else if ((row % 2) != 1 || (column % 2) != 1)
                 {
                     // Inner walls
-                    cell.IsWall = true;
+                    cell.Kind = CellKind.Wall;
                 }
                 else
                 {
                     // Empty space
                     // - Always on odd indices.
-                    cell.IsWall = false;
+                    cell.Kind = CellKind.None;
                 }
 
                 maze[column, row] = cell;
@@ -135,9 +134,9 @@
 
         var middleColumn = Size + 1;
         // Set entry
-        MazeData[middleColumn, 0] = new MazeCell() { IsWall = false };
+        MazeData[middleColumn, 0] = new CellDefinition() { Kind = CellKind.None };
         // Set exit
-        MazeData[middleColumn, BoardDimension - 1] = new MazeCell() { IsWall = false };
+        MazeData[middleColumn, BoardDimension - 1] = new CellDefinition() { Kind = CellKind.None };
         // Generate maze
         GenerateMaze(MazeData, new bool[Size, Size], _random.Next(0, Size), _random.Next(0, Size));
         // Set position
@@ -146,7 +145,7 @@
         SetVisibility(BoardDimension - 1, middleColumn, 1, true);
     }
 
-    private void GenerateMaze(MazeCell[,] maze, bool[,] visitedCells, int row, int column)
+    private void GenerateMaze(CellDefinition[,] maze, bool[,] visitedCells, int row, int column)
     {
         visitedCells[column, row] = true;
 
@@ -194,7 +193,7 @@
                 continue;
             }
 
-            maze[mazeDataColumn, mazeDataRow] = new MazeCell() { IsWall = false };
+            maze[mazeDataColumn, mazeDataRow] = new CellDefinition() { Kind = CellKind.None };
             GenerateMaze(maze, visitedCells, nextRow, nextColumn);
         }
     }
@@ -344,11 +343,5 @@
     private enum Direction : byte
     {
         N, E, S, W
-    }
-
-    private struct MazeCell
-    {
-        public bool IsVisible { get; set; }
-        public bool IsWall { get; set; }
     }
 }

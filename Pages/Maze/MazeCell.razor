@@ -1,0 +1,8 @@
+<div class="@ClassName"></div>
+
+@functions {
+    private string ClassName => (Definition.IsVisible && Definition.IsWall) ? "square wall" : "square";
+
+    [Parameter]
+    public CellDefinition Definition { get; set; }
+}
